@@ -25,7 +25,7 @@ function CreateChannel() {
   const [allOptions, setAllOptions] = useState([]); // Store all contacts
   const [selectedOptions, setSelectedOptions] = useState([]); // Selected contacts
   const [channelName, setChannelName] = useState("");
-
+  console.log(channelName);
   useEffect(() => {
     const getAllContact = async () => {
       try {
