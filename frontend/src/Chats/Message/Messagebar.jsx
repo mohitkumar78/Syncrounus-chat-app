@@ -12,6 +12,7 @@ function Messagebar() {
   const { selectedChatData, selectedchatType } = useSelector(
     (store) => store.contact
   );
+  console.log(selectedChatData);
   const { token } = useSelector((store) => store.auth);
   const fileref = useRef();
   const { user } = useSelector((store) => store.auth);
@@ -29,16 +30,28 @@ function Messagebar() {
       return;
     }
 
-    const messageData = {
-      sender: user._id,
-      content: message,
-      recipient: selectedChatData._id,
-      messageType: "text",
-      fileUrl: undefined,
-    };
+    if (selectedchatType === "contact") {
+      const messageData = {
+        sender: user._id,
+        content: message,
+        recipient: selectedChatData._id,
+        messageType: "text",
+        fileUrl: undefined,
+      };
+      console.log("sending message", messageData);
+      socket.emit("sendMessage", messageData);
+    } else if (selectedchatType === "channel") {
+      const messageData = {
+        sender: user._id,
+        content: message,
+        messageType: "text",
+        fileUrl: undefined,
+        channelId: selectedChatData._id,
+      };
+      console.log("sending channel message", messageData);
+      socket.emit("send-channel-message", messageData);
+    }
 
-    console.log("📩 Sending message:", messageData);
-    socket.emit("sendMessage", messageData);
     setMessage("");
   };
   const handleFileAttacment = () => {
@@ -46,46 +59,58 @@ function Messagebar() {
       fileref.current.click();
     }
   };
+
   const handleAttacmentChange = async (event) => {
     try {
       const file = event.target.files[0];
 
-      if (file) {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("token", token); // ✅ Add token to formData
+      if (!file) {
+        console.warn("No file selected.");
+        return;
+      }
 
-        console.log("Sending token:", token); // Debugging
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("token", token); // ✅ Add token to formData
 
-        const response = await axios.post(
-          "http://localhost:4000/api/v1/message/upload-file",
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-              Authorization: `Bearer ${token}`, // ✅ Add token to headers
-            },
-          }
-        );
+      console.log("Sending token:", token); // Debugging
 
+      const response = await axios.post(
+        "http://localhost:5000/api/v1/message/upload-file",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`, // ✅ Add token to headers
+          },
+        }
+      );
+
+      if (response.status === 200 && response.data?.filePath) {
         console.log("File uploaded successfully:", response.data.filePath);
-        if (response.status === 200 && response.data) {
-          if (selectedchatType === "contact") {
-            const messageData = {
-              sender: user._id,
-              content: undefined,
-              recipient: selectedChatData._id,
-              messageType: "file",
-              fileUrl: response.data.filePath,
-            };
-            socket.emit("sendMessage", messageData);
-          }
+
+        let messageData = {
+          sender: user._id,
+          content: undefined,
+          messageType: "file",
+          fileUrl: response.data.filePath,
+        };
+
+        if (selectedchatType === "contact") {
+          messageData.recipient = selectedChatData._id;
+          socket.emit("sendMessage", messageData);
+        } else if (selectedchatType === "channel") {
+          messageData.channelId = selectedChatData._id;
+          socket.emit("send-channel-message", messageData);
         }
       }
     } catch (error) {
-      console.error("Error in file uploading", error);
+      console.error(
+        "Error in file uploading:",
+        error.response?.data || error.message
+      );
     }
-  };
+  }; // ✅ Properly closed function
 
   useEffect(() => {
     function handleClickOutside(event) {

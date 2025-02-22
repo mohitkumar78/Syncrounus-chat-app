@@ -9,12 +9,13 @@ import { setDirectContactList } from "../Store/contact-slice";
 import ContactList from "./ContactList";
 import CreateChannel from "./CreatateChannel/CreateChaneel";
 import { setChannel } from "@/Store/channel-slice";
-import ChannelList from "./CreatateChannel/ChannelList";
+import "./Scroolbar.css";
 function Chat_contact() {
   const dispatch = useDispatch();
   const { token } = useSelector((store) => store.auth);
   const { DirectMessagesContacts } = useSelector((store) => store.contact);
   const { channels } = useSelector((store) => store.channel);
+
   useEffect(() => {
     const getContact = async () => {
       try {
@@ -29,14 +30,14 @@ function Chat_contact() {
             },
           }
         );
-        console.log(response.data.contacts);
         if (response) {
           dispatch(setDirectContactList({ contacts: response.data.contacts }));
         }
       } catch (error) {
-        console.log("error is occur in chat_contact", error);
+        console.log("error in chat_contact", error);
       }
     };
+
     const getAllUserChannel = async () => {
       try {
         const response = await axios.post(
@@ -50,18 +51,17 @@ function Chat_contact() {
             },
           }
         );
-
         if (response) {
-          console.log(response);
           dispatch(setChannel({ Channel: response.data.Channels }));
         }
       } catch (error) {
-        console.log("Error is Occur while fetching all channel");
+        console.log("Error while fetching all channels");
       }
     };
+
     getAllUserChannel();
     getContact();
-  }, [setDirectContactList, setChannel]);
+  }, [dispatch]);
 
   return (
     <div className="relative w-full md:w-[35vw] lg:w-[30vw] xl:w-[20vw] bg-[#1b1c24] border-r border-[#2f303b] h-screen flex flex-col">
@@ -76,7 +76,7 @@ function Chat_contact() {
           <Title text="Direct Messages" />
           <NewDm />
         </div>
-        <div className="max-h-[38vh] scrollbar-hidden overflow-y-auto">
+        <div className="max-h-[38vh] scrollbar-thin overflow-y-auto">
           <ContactList contacts={DirectMessagesContacts} />
         </div>
       </div>
@@ -87,8 +87,8 @@ function Chat_contact() {
           <Title text="Create Channels" />
           <CreateChannel />
         </div>
-        <div className="max-h-[38vh] scrollbar-hidden overflow-y-auto">
-          <ChannelList />
+        <div className="max-h-[38vh] scrollbar-thin overflow-y-auto">
+          <ContactList contacts={channels} ischannel={true} />
         </div>
       </div>
 

@@ -10,8 +10,9 @@ import { Avatar, AvatarImage } from "@/components/ui/avatar";
 function ContactList({ contacts = [], ischannel = false }) {
   const dispatch = useDispatch();
   const { selectedChatData } = useSelector((store) => store.contact);
-  console.log(contacts);
+
   const handleClick = (contact) => {
+    console.log(contact);
     if (ischannel) {
       dispatch(setChatType({ chatType: "channel" }));
     } else {
@@ -20,7 +21,8 @@ function ContactList({ contacts = [], ischannel = false }) {
     dispatch(setSelectedChatData({ contact }));
 
     if (selectedChatData && selectedChatData._id !== contact._id) {
-      dispatch(setSelectedChat([]));
+      console.log("Switching chat, clearing previous messages...");
+      dispatch(setSelectedChat({ message: [] })); // Pass an object
     }
   };
 
@@ -39,7 +41,24 @@ function ContactList({ contacts = [], ischannel = false }) {
               }`}
             style={{ maxWidth: "100%", width: "100%", whiteSpace: "nowrap" }}
           >
-            {!ischannel && (
+            {ischannel ? (
+              <div className="flex items-center gap-4">
+                {/* Channel Rendering Logic */}
+                <Avatar className="w-12 h-12 rounded-full border-2 border-[#f03a17] shadow-md">
+                  <div className="flex items-center justify-center w-full h-full text-white font-semibold text-lg bg-gradient-to-r from-[#6a11cb] to-[#2575fc]">
+                    {contact?.name?.charAt(0) || ""}
+                  </div>
+                </Avatar>
+                <div className="flex flex-col overflow-hidden">
+                  <span className="text-lg font-medium text-gray-300 truncate">
+                    {contact?.name}
+                  </span>
+                  <span className="text-sm text-gray-500 truncate dark:text-gray-400">
+                    {contact?.description}
+                  </span>
+                </div>
+              </div>
+            ) : (
               <>
                 <Avatar className="w-12 h-12 rounded-full border-2 border-[#f03a17] shadow-md transform transition-transform duration-300 hover:scale-110">
                   {contact?.image ? (

@@ -27,7 +27,7 @@ export const SocketProvider = ({ children }) => {
 
   useEffect(() => {
     if (user && !socketRef.current) {
-      socketRef.current = io("http://localhost:4000", {
+      socketRef.current = io("http://localhost:5000", {
         withCredentials: true,
         query: { userId: user._id },
       });
@@ -36,8 +36,9 @@ export const SocketProvider = ({ children }) => {
         console.log("✅ Connected to socket server:", socketRef.current.id);
       });
 
+      // Direct message listener
       socketRef.current.on("receiveMessage", (message) => {
-        console.log("📩 Message received:", message);
+        console.log("📩 Direct message received:", message);
 
         // Use refs to get the latest state values
         const latestSelectedChatData = selectedChatDataRef.current;
@@ -51,7 +52,20 @@ export const SocketProvider = ({ children }) => {
           (latestSelectedChatData?._id === message.sender._id ||
             latestSelectedChatData?._id === message.recipient._id)
         ) {
-          console.log("📌 Storing message");
+          console.log("📌 Storing direct message");
+          dispatch(setSelectedChat({ message }));
+        }
+      });
+
+      // Channel message listener
+      socketRef.current.on("recive-channel-msg", (message) => {
+        console.log("📩 Channel message received:", message);
+        const latestSelectedChatType = selectedchatTypeRef.current;
+
+        console.log("Current chat type:", latestSelectedChatType);
+        // Update condition to check for channel type
+        if (latestSelectedChatType === "channel") {
+          console.log("📌 Storing channel message");
           dispatch(setSelectedChat({ message }));
         }
       });

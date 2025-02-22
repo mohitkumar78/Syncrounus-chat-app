@@ -4,9 +4,9 @@ import { useSelector, useDispatch } from "react-redux";
 import { setSelectedChat } from "../../Store/contact-slice";
 import { MdFolderZip } from "react-icons/md";
 import { IoMdArrowRoundDown } from "react-icons/io";
-
 import axios from "axios";
 import { IoCloseSharp } from "react-icons/io5";
+import "./Scroolbar.css";
 
 function Message_Container() {
   const dispatch = useDispatch();
@@ -15,8 +15,9 @@ function Message_Container() {
   const { user, token } = useSelector((store) => store.auth);
   const { selectedChatMessage, selectedChatData, selectedchatType } =
     useSelector((store) => store.contact);
-
+  console.log("Messages:", selectedChatMessage);
   const scrollRef = useRef();
+
   const checkImage = (filePath) => {
     const imageRegax = /\.(jpg|jpeg|png|bmp|tiff|webp|svg|ico|heic|hefif)$/i;
     return imageRegax.test(filePath);
@@ -26,7 +27,7 @@ function Message_Container() {
     const getMessage = async () => {
       try {
         const response = await axios.post(
-          "http://localhost:4000/api/v1/message/getAllmessage",
+          "http://localhost:5000/api/v1/message/getAllmessage",
           { token, recipient: selectedChatData?._id },
           { headers: { "Content-Type": "application/json" } }
         );
@@ -40,7 +41,10 @@ function Message_Container() {
       }
     };
 
-    if (selectedChatData?._id && selectedchatType === "contact") {
+    if (
+      selectedChatData?._id &&
+      (selectedchatType === "contact" || selectedchatType === "channel")
+    ) {
       getMessage();
     }
   }, [selectedChatData, selectedchatType, token, dispatch]);
@@ -50,9 +54,10 @@ function Message_Container() {
       scrollRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [selectedChatMessage]);
+
   const FileDownload = async (url) => {
     try {
-      const response = await fetch(`http://localhost:4000/${url}`);
+      const response = await fetch(`http://localhost:5000/${url}`);
       if (!response.ok) throw new Error("Failed to fetch file");
 
       const blob = await response.blob();
@@ -60,7 +65,7 @@ function Message_Container() {
 
       const link = document.createElement("a");
       link.href = downloadUrl;
-      link.download = url.split("/").pop(); // Extracting filename
+      link.download = url.split("/").pop(); // Extract filename
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -92,29 +97,31 @@ function Message_Container() {
               {moment(message.timestamp).format("LL")}
             </div>
           )}
-          {renderDmMessage(message)}
+          {renderChatMessage(message)}
         </div>
       );
     });
   };
 
-  const renderDmMessage = (message) => {
-    const isSender = message.sender === user?._id;
+  // Helper function to render messages for both channels and DMs
+  const renderChatMessage = (message) => {
+    // Determine sender ID:
+    const senderId = message.sender?._id || message.sender;
+    // If senderId equals the logged-in user ID, then it's a sent message.
+    const isSender = senderId === user?._id;
+
+    // Layout: sent messages right aligned, received messages left aligned.
+    const containerClasses = isSender
+      ? "flex justify-end px-2 my-2"
+      : "flex justify-start px-2 my-2";
+    const messageClasses = isSender
+      ? "bg-[#8417ff] text-white border border-[#6b11cc] rounded-lg p-3 max-w-[80%] sm:max-w-[60%] break-words shadow-md transition-all transform scale-95 hover:scale-100"
+      : "bg-[#2a2b33] text-white border border-[#ffffff]/20 rounded-lg p-3 max-w-[80%] sm:max-w-[60%] break-words shadow-md transition-all transform scale-95 hover:scale-100";
 
     return (
-      <div
-        className={`flex my-2 ${
-          isSender ? "justify-start" : "justify-end"
-        } px-2`}
-      >
+      <div className={containerClasses}>
         {message.messageType === "text" && (
-          <div
-            className={`p-3 rounded-lg max-w-[80%] sm:max-w-[60%] break-words shadow-md transition-all transform scale-95 hover:scale-100 ${
-              isSender
-                ? "bg-[#8417ff] text-white border border-[#6b11cc] self-start"
-                : "bg-[#2a2b33] text-white border border-[#ffffff]/20 self-end"
-            }`}
-          >
+          <div className={messageClasses}>
             {message?.content}
             <div className="mt-1 text-xs text-gray-400">
               {moment(message?.timestamp).format("LT")}
@@ -123,13 +130,7 @@ function Message_Container() {
         )}
 
         {message.messageType === "file" && (
-          <div
-            className={`p-3 rounded-lg max-w-[80%] sm:max-w-[60%] break-words shadow-md transition-all transform scale-95 hover:scale-100 ${
-              isSender
-                ? "bg-[#8417ff]/50 text-white border border-solid self-start"
-                : "bg-[#2a2b33] text-white border border-[#ffffff]/20 self-end"
-            }`}
-          >
+          <div className={messageClasses}>
             {checkImage(message.fileUrl) ? (
               <div
                 className="cursor-pointer"
@@ -139,9 +140,9 @@ function Message_Container() {
                 }}
               >
                 <img
-                  src={`http://localhost:4000/${message.fileUrl}`}
+                  src={`http://localhost:5000/${message.fileUrl}`}
                   alt="Uploaded file"
-                  className="w-full max-w-[300px] bg-cover h-auto rounded-md"
+                  className="w-full max-w-[300px] h-auto rounded-md"
                 />
               </div>
             ) : (
@@ -160,6 +161,9 @@ function Message_Container() {
                 </span>
               </div>
             )}
+            <div className="mt-1 text-xs text-gray-400">
+              {moment(message?.timestamp).format("LT")}
+            </div>
           </div>
         )}
       </div>
@@ -170,8 +174,9 @@ function Message_Container() {
     <div className="flex-1 w-full p-4 px-4 sm:px-8 overflow-y-auto max-h-[80vh] custom-scrollbar">
       {renderMessage()}
       <div ref={scrollRef}></div>
+
       {showImage && (
-        <div className="fixed z-[1000] top-0 left-0 h-[100vh] w-[100vw] flex items-center justify-center backdrop-blur-lg flex-col">
+        <div className="fixed z-[1000] top-0 left-0 h-[100vh] w-[100vw] flex flex-col items-center justify-center backdrop-blur-lg">
           <div>
             <img
               src={`http://localhost:4000/${ImageUrl}`}
@@ -179,12 +184,10 @@ function Message_Container() {
               className="h-[80vh] w-full bg-cover"
             />
           </div>
-          <div className="top-0 flex gap-4 mt-6">
+          <div className="flex gap-4 mt-6">
             <button
               className="p-3 text-3xl transition-all duration-300 rounded-full cursor-pointer bg-black/20 hover:bg-black/50"
-              onClick={() => {
-                FileDownload(ImageUrl);
-              }}
+              onClick={() => FileDownload(ImageUrl)}
             >
               <IoMdArrowRoundDown />
             </button>

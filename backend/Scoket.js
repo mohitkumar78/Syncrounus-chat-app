@@ -1,63 +1,89 @@
-import { Server as SocketIoServer } from "socket.io";
-import Message from "./Model/Message.model.js";
+import { createContext, useContext, useEffect, useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { io } from "socket.io-client";
+import { setSelectedChat } from "../Store/contact-slice";
 
-const socketSetup = (server) => {
-    const io = new SocketIoServer(server, {
-        cors: {
-            origin: "http://localhost:5173",
-            methods: ["GET", "POST"],
-            credentials: true,
-        },
-    });
+const SocketContext = createContext(null);
 
-    const userSocketMap = new Map(); // Stores userId -> socketId mapping
+export const useSocket = () => useContext(SocketContext);
 
-    io.on("connection", (socket) => {
-        const userId = socket.handshake.query.userId;
+export const SocketProvider = ({ children }) => {
+    const { user } = useSelector((store) => store.auth);
+    const dispatch = useDispatch();
+    const socketRef = useRef(null);
+    const { selectedchatType, selectedChatData } = useSelector(
+        (store) => store.contact
+    );
 
-        if (userId) {
-            userSocketMap.set(userId, socket.id); // Store latest socket ID for the user
-            console.log(`✅ User ${userId} connected with socket ID ${socket.id}`);
-        } else {
-            console.log("❌ User ID not provided in handshake.");
+    // Create refs to always store the latest state
+    const selectedChatDataRef = useRef(selectedChatData);
+    const selectedchatTypeRef = useRef(selectedchatType);
+
+    // Update the refs whenever state changes
+    useEffect(() => {
+        selectedChatDataRef.current = selectedChatData;
+        selectedchatTypeRef.current = selectedchatType;
+    }, [selectedChatData, selectedchatType]);
+
+    useEffect(() => {
+        if (user && !socketRef.current) {
+            socketRef.current = io("http://localhost:5000", {
+                withCredentials: true,
+                query: { userId: user._id },
+            });
+
+            socketRef.current.on("connect", () => {
+                console.log("✅ Connected to socket server:", socketRef.current.id);
+            });
+
+            socketRef.current.on("receiveMessage", (message) => {
+                console.log("📩 Message received:", message);
+
+                // Use refs to get the latest state values
+                const latestSelectedChatData = selectedChatDataRef.current;
+                const latestSelectedChatType = selectedchatTypeRef.current;
+
+                console.log("Selected Chat Data:", latestSelectedChatData);
+                console.log("Selected Chat Type:", latestSelectedChatType);
+
+                if (
+                    latestSelectedChatType === "contact" &&
+                    (latestSelectedChatData?._id === message.sender._id ||
+                        latestSelectedChatData?._id === message.recipient._id)
+                ) {
+                    console.log("📌 Storing message");
+                    dispatch(setSelectedChat({ message }));
+                }
+            });
+
+            socketRef.current.on("recive-channel-msg", (message) => {
+                console.log("✅ Received channel message:", message);
+                console.log("🆔 Selected Chat Data ID:", selectedChatData?._id);
+                console.log("🆔 Message Channel ID:", message.channelId);
+
+                if (
+                    selectedchatType !== undefined &&
+                    selectedChatData?._id === message.channelId
+                ) {
+                    console.log("📌 Updating store with new channel message");
+                    dispatch(setSelectedChat({ message }));
+                }
+            });
+
+            socketRef.current.on("disconnect", () => {
+                console.log("⚠️ Socket disconnected. Reconnecting...");
+                socketRef.current.connect();
+            });
+
+            return () => {
+                socketRef.current.disconnect();
+            };
         }
+    }, [user, dispatch, selectedchatType, selectedChatData]);
 
-        // Handle message sending
-        socket.on("sendMessage", async (message) => {
-            try {
-                console.log("📩 Received message:", message);
-
-                const createMessage = await Message.create(message);
-
-                const messageData = await Message.findById(createMessage._id)
-                    .populate("sender", "_id email firstname lastname image color")
-                    .populate("recipient", "_id email firstname lastname image color");
-
-                const recipientSocketId = userSocketMap.get(message.recipient); // Get recipient's socket
-                const senderSocketId = userSocketMap.get(message.sender); // Get sender's socket
-
-                // Send the message to the recipient
-                if (recipientSocketId) {
-                    io.to(recipientSocketId).emit("receiveMessage", messageData);
-                } else {
-                    console.log(`⚠️ Recipient ${message.recipient} is offline.`);
-                }
-
-                // Send the message back to the sender (so it updates in their chat UI too)
-                if (senderSocketId) {
-                    io.to(senderSocketId).emit("receiveMessage", messageData);
-                }
-            } catch (error) {
-                console.error("❌ Error sending message:", error);
-            }
-        });
-
-        // Handle disconnection
-        socket.on("disconnect", () => {
-            console.log(`⚠️ User ${userId} disconnected.`);
-            userSocketMap.delete(userId); // Remove the user from the map
-        });
-    });
+    return (
+        <SocketContext.Provider value={socketRef.current}>
+            {children}
+        </SocketContext.Provider>
+    );
 };
-
-export default socketSetup;
