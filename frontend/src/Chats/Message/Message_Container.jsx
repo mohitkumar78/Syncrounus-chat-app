@@ -5,7 +5,9 @@ import { setSelectedChat } from "../../Store/contact-slice";
 import { MdFolderZip } from "react-icons/md";
 import { IoMdArrowRoundDown } from "react-icons/io";
 import axios from "axios";
+import { getColor } from "@/Utils/Utils";
 import { IoCloseSharp } from "react-icons/io5";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import "./Scroolbar.css";
 
 function Message_Container() {
@@ -83,7 +85,7 @@ function Message_Container() {
     ) {
       return <div className="text-center text-gray-500">No messages yet.</div>;
     }
-
+    console.log(selectedChatMessage);
     let lastDate = null;
     return selectedChatMessage.map((message, index) => {
       const messageDate = moment(message.timestamp).format("YYYY-MM-DD");
@@ -103,102 +105,80 @@ function Message_Container() {
     });
   };
 
-  // Helper function to render messages for both channels and DMs
   const renderChatMessage = (message) => {
-    // Determine sender ID:
     const senderId = message.sender?._id || message.sender;
-    // If senderId equals the logged-in user ID, then it's a sent message.
     const isSender = senderId === user?._id;
 
-    // Layout: sent messages right aligned, received messages left aligned.
-    const containerClasses = isSender
-      ? "flex justify-end px-2 my-2"
-      : "flex justify-start px-2 my-2";
-    const messageClasses = isSender
-      ? "bg-[#8417ff] text-white border border-[#6b11cc] rounded-lg p-3 max-w-[80%] sm:max-w-[60%] break-words shadow-md transition-all transform scale-95 hover:scale-100"
-      : "bg-[#2a2b33] text-white border border-[#ffffff]/20 rounded-lg p-3 max-w-[80%] sm:max-w-[60%] break-words shadow-md transition-all transform scale-95 hover:scale-100";
-
     return (
-      <div className={containerClasses}>
-        {message.messageType === "text" && (
-          <div className={messageClasses}>
-            {message?.content}
-            <div className="mt-1 text-xs text-gray-400">
-              {moment(message?.timestamp).format("LT")}
-            </div>
-          </div>
-        )}
-
-        {message.messageType === "file" && (
-          <div className={messageClasses}>
-            {checkImage(message.fileUrl) ? (
-              <div
-                className="cursor-pointer"
-                onClick={() => {
-                  setImageUrl(message.fileUrl);
-                  setShowImage(true);
-                }}
-              >
-                <img
-                  src={`http://localhost:5000/${message.fileUrl}`}
-                  alt="Uploaded file"
-                  className="w-full max-w-[300px] h-auto rounded-md"
-                />
-              </div>
+      <div
+        className={`flex ${
+          isSender ? "justify-end" : "justify-start"
+        } my-2 px-2 w-full`}
+      >
+        {!isSender && (
+          <Avatar className="w-10 h-10 mr-2">
+            {message.sender?.image ? (
+              <AvatarImage
+                src={message.sender.image}
+                alt="profile"
+                className="object-cover"
+              />
             ) : (
-              <div className="flex items-center justify-center gap-4">
-                <span className="p-3 text-3xl rounded-full text-white/80 bg-black/20">
-                  <MdFolderZip />
-                </span>
-                <span className="block mt-1 text-sm">
-                  {message.fileUrl.split("/").pop()}
-                </span>
-                <span
-                  className="p-3 text-3xl transition-all duration-300 rounded-full cursor-pointer bg-black/20 hover:bg-black/50"
-                  onClick={() => FileDownload(message.fileUrl)}
-                >
-                  <IoMdArrowRoundDown />
-                </span>
+              <div
+                className={`text-white flex items-center justify-center w-full h-full font-semibold ${getColor(
+                  message.sender?.color
+                )}`}
+              >
+                {message.sender?.firstname?.charAt(0)}{" "}
+                {message.sender?.lastname?.charAt(0)}
               </div>
             )}
-            <div className="mt-1 text-xs text-gray-400">
-              {moment(message?.timestamp).format("LT")}
-            </div>
-          </div>
+          </Avatar>
         )}
+        <div
+          className={`rounded-xl p-3 shadow-md max-w-[75%] text-white ${
+            isSender ? "bg-indigo-600" : "bg-gray-800"
+          }`}
+        >
+          {message.messageType === "text" ? (
+            <p className="text-base leading-relaxed">{message?.content}</p>
+          ) : (
+            <img
+              src={`http://localhost:5000/${message.fileUrl}`}
+              alt="Uploaded file"
+              className="w-full max-w-[300px] h-auto rounded-md cursor-pointer"
+              onClick={() => {
+                setImageUrl(message.fileUrl);
+                setShowImage(true);
+              }}
+            />
+          )}
+          <div className="mt-1 text-xs text-right text-gray-400">
+            {moment(message?.timestamp).format("LT")}
+          </div>
+        </div>
       </div>
     );
   };
 
   return (
-    <div className="flex-1 w-full p-4 px-4 sm:px-8 overflow-y-auto max-h-[80vh] custom-scrollbar">
+    <div className="flex-1 w-full p-4 px-4 sm:px-8 overflow-y-auto max-h-[80vh] custom-scrollbar bg-gray-900 rounded-lg shadow-lg">
       {renderMessage()}
       <div ref={scrollRef}></div>
 
       {showImage && (
-        <div className="fixed z-[1000] top-0 left-0 h-[100vh] w-[100vw] flex flex-col items-center justify-center backdrop-blur-lg">
-          <div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-black/50">
+          <div className="relative p-4">
             <img
-              src={`http://localhost:4000/${ImageUrl}`}
+              src={`http://localhost:5000/${ImageUrl}`}
               alt="Uploaded file"
-              className="h-[80vh] w-full bg-cover"
+              className="h-[80vh] w-auto max-w-full rounded-lg shadow-lg"
             />
-          </div>
-          <div className="flex gap-4 mt-6">
             <button
-              className="p-3 text-3xl transition-all duration-300 rounded-full cursor-pointer bg-black/20 hover:bg-black/50"
-              onClick={() => FileDownload(ImageUrl)}
+              className="absolute p-2 text-white transition bg-gray-800 rounded-full top-2 right-2 hover:bg-red-500"
+              onClick={() => setShowImage(false)}
             >
-              <IoMdArrowRoundDown />
-            </button>
-            <button
-              className="p-3 text-3xl transition-all duration-300 rounded-full cursor-pointer bg-black/20 hover:bg-black/50"
-              onClick={() => {
-                setShowImage(false);
-                setImageUrl(null);
-              }}
-            >
-              <IoCloseSharp />
+              <IoCloseSharp size={24} />
             </button>
           </div>
         </div>

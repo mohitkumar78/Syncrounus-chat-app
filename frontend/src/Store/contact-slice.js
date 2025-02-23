@@ -33,16 +33,18 @@ const contactSlice = createSlice({
 
             if (Array.isArray(action.payload.message)) {
                 console.log("Setting full chat history...");
+                console.log(action.payload.message)
                 state.selectedChatMessage = action.payload.message.map((msg) => ({
                     content: msg?.content || "",
                     fileUrl: msg?.fileUrl || "",
                     messageType: msg?.messageType || "text",
                     recipient: msg?.recipient?._id || msg?.recipient || "",
-                    sender: msg?.sender?._id || msg?.sender || "",
+                    sender: state.selectedchatType === "channel" ? msg?.sender : msg?.sender?._id || "",
                     timestamp: msg?.timestamp || new Date().toISOString(),
                 }));
             } else {
                 console.log("Appending new message...");
+
                 state.selectedChatMessage.push({
                     content: action.payload.message?.content || "",
                     messageType: action.payload.message?.messageType || "text",
@@ -52,12 +54,13 @@ const contactSlice = createSlice({
                         action.payload.message?.recipient ||
                         "",
                     sender:
-                        action.payload.message?.sender?._id ||
-                        action.payload.message?.sender ||
-                        "",
+                        state.selectedchatType === "channel" ? action.payload.message?.sender :
+                            action.payload.message?.sender?._id ||
+                            "",
                     timestamp:
                         action.payload.message?.timestamp || new Date().toISOString(),
                 });
+                console.log(state.selectedChatMessage)
             }
         },
         setDirectContactList: (state, action) => {
