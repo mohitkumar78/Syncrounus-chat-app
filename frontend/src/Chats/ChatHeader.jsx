@@ -9,6 +9,7 @@ function ChatHeader() {
   const { selectedChatData, selectedchatType } = useSelector(
     (store) => store.contact
   );
+  const { selectedChannelData } = useSelector((store) => store.channel);
   const dispatch = useDispatch();
 
   return (
@@ -49,15 +50,15 @@ function ChatHeader() {
             {/* Channel Rendering Logic */}
             <Avatar className="w-12 h-12 rounded-full border-2 border-[#f03a17] shadow-md">
               <div className="flex items-center justify-center w-full h-full text-white font-semibold text-lg bg-gradient-to-r from-[#6a11cb] to-[#2575fc]">
-                {selectedChatData?.name?.charAt(0) || ""}
+                {selectedChannelData?.name?.charAt(0) || ""}
               </div>
             </Avatar>
             <div className="flex flex-col overflow-hidden">
               <span className="text-lg font-medium text-gray-300 truncate">
-                {selectedChatData?.name}
+                {selectedChannelData?.name}
               </span>
               <span className="text-sm text-gray-500 truncate dark:text-gray-400">
-                {selectedChatData?.description}
+                {selectedChannelData?.description}
               </span>
             </div>
           </div>

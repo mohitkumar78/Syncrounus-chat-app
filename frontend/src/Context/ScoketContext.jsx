@@ -2,7 +2,8 @@ import { createContext, useContext, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { io } from "socket.io-client";
 import { setSelectedChat } from "../Store/contact-slice";
-
+import { clearChatContainer } from "../Store/contact-slice";
+import { setSelectedChannelChat } from "../Store/channel-slice";
 const SocketContext = createContext(null);
 
 export const useSocket = () => useContext(SocketContext);
@@ -14,16 +15,18 @@ export const SocketProvider = ({ children }) => {
   const { selectedchatType, selectedChatData } = useSelector(
     (store) => store.contact
   );
-
+  const { selectedChannelData } = useSelector((store) => store.channel);
   // Create refs to always store the latest state
   const selectedChatDataRef = useRef(selectedChatData);
   const selectedchatTypeRef = useRef(selectedchatType);
 
+  const selectedChannelDataRef = useRef(selectedChannelData);
   // Update the refs whenever state changes
   useEffect(() => {
     selectedChatDataRef.current = selectedChatData;
     selectedchatTypeRef.current = selectedchatType;
-  }, [selectedChatData, selectedchatType]);
+    selectedChannelDataRef.current = selectedChannelData;
+  }, [selectedChatData, selectedchatType, selectedChannelData]);
 
   useEffect(() => {
     if (user && !socketRef.current) {
@@ -36,9 +39,8 @@ export const SocketProvider = ({ children }) => {
         console.log("✅ Connected to socket server:", socketRef.current.id);
       });
 
-      // Direct message listener
       socketRef.current.on("receiveMessage", (message) => {
-        console.log("📩 Direct message received:", message);
+        console.log("📩 Message received:", message);
 
         // Use refs to get the latest state values
         const latestSelectedChatData = selectedChatDataRef.current;
@@ -52,24 +54,23 @@ export const SocketProvider = ({ children }) => {
           (latestSelectedChatData?._id === message.sender._id ||
             latestSelectedChatData?._id === message.recipient._id)
         ) {
-          console.log("📌 Storing direct message");
+          console.log("📌 Storing message");
           dispatch(setSelectedChat({ message }));
         }
       });
-
-      // Channel message listener
       socketRef.current.on("recive-channel-msg", (message) => {
-        console.log("📩 Channel message received:", message);
+        console.log("reciving channel message", message);
+        dispatch(clearChatContainer());
+        const latestSelectedChannelData = selectedChannelDataRef.current;
         const latestSelectedChatType = selectedchatTypeRef.current;
-
-        console.log("Current chat type:", latestSelectedChatType);
-        // Update condition to check for channel type
-        if (latestSelectedChatType === "channel") {
-          console.log("📌 Storing channel message");
-          dispatch(setSelectedChat({ message }));
+        if (
+          latestSelectedChatType === "channel" &&
+          latestSelectedChannelData?._id === message.channelId
+        ) {
+          console.log("📌 Storing message");
+          dispatch(setSelectedChannelChat({ message }));
         }
       });
-
       socketRef.current.on("disconnect", () => {
         console.log("⚠️ Socket disconnected. Reconnecting...");
         socketRef.current.connect();

@@ -17,7 +17,7 @@ import {
 import Select from "react-select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { addChannel } from "@/Store/channel-slice";
+import { addChannel } from "../../Store/channel-slice";
 function CreateChannel() {
   const dispatch = useDispatch();
   const { token } = useSelector((store) => store.auth);

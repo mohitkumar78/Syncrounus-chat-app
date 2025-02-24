@@ -12,7 +12,8 @@ function Messagebar() {
   const { selectedChatData, selectedchatType } = useSelector(
     (store) => store.contact
   );
-  console.log(selectedChatData);
+  const { selectedChannelData } = useSelector((store) => store.channel);
+
   const { token } = useSelector((store) => store.auth);
   const fileref = useRef();
   const { user } = useSelector((store) => store.auth);
@@ -20,7 +21,7 @@ function Messagebar() {
   const socket = useSocket();
   const [message, setMessage] = useState("");
   const [emojiPicker, setEmojiPicker] = useState(false);
-
+  console.log(selectedchatType);
   const handleMessage = async () => {
     if (!message.trim()) return;
 
@@ -46,7 +47,7 @@ function Messagebar() {
         content: message,
         messageType: "text",
         fileUrl: undefined,
-        channelId: selectedChatData._id,
+        channelId: selectedChannelData._id,
       };
       console.log("sending channel message", messageData);
       socket.emit("send-channel-message", messageData);
@@ -100,7 +101,7 @@ function Messagebar() {
           messageData.recipient = selectedChatData._id;
           socket.emit("sendMessage", messageData);
         } else if (selectedchatType === "channel") {
-          messageData.channelId = selectedChatData._id;
+          messageData.channelId = selectedChannelData._id;
           socket.emit("send-channel-message", messageData);
         }
       }

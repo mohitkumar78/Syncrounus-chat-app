@@ -4,27 +4,35 @@ import { useSelector, useDispatch } from "react-redux";
 import { setSelectedChat } from "../../Store/contact-slice";
 import { MdFolderZip } from "react-icons/md";
 import { IoMdArrowRoundDown } from "react-icons/io";
-import axios from "axios";
-import { getColor } from "@/Utils/Utils";
-import { IoCloseSharp } from "react-icons/io5";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import "./Scroolbar.css";
-
+import axios from "axios";
+import { IoCloseSharp } from "react-icons/io5";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
 function Message_Container() {
   const dispatch = useDispatch();
+  const { selectedChannelChat } = useSelector((store) => store.channel);
+
   const [showImage, setShowImage] = useState(false);
   const [ImageUrl, setImageUrl] = useState(null);
   const { user, token } = useSelector((store) => store.auth);
-  const { selectedChatMessage, selectedChatData, selectedchatType } =
-    useSelector((store) => store.contact);
-  console.log("Messages:", selectedChatMessage);
+  const {
+    selectedChatMessage,
+    selectedChatData,
+    selectedchatType, // Updated to camelCase
+  } = useSelector((store) => store.contact);
+  console.log(selectedChatData, selectedchatType, selectedChatMessage);
+  const messageContainerRef = useRef();
   const scrollRef = useRef();
+  const [isAtBottom, setIsAtBottom] = useState(true);
+  console.log("channel msg", selectedChannelChat);
 
+  // Check if file is an image
   const checkImage = (filePath) => {
-    const imageRegax = /\.(jpg|jpeg|png|bmp|tiff|webp|svg|ico|heic|hefif)$/i;
-    return imageRegax.test(filePath);
+    const imageRegex = /\.(jpg|jpeg|png|bmp|tiff|webp|svg|ico|heic|hefif)$/i;
+    return imageRegex.test(filePath);
   };
 
+  // Fetch messages from API if contact chat is selected
   useEffect(() => {
     const getMessage = async () => {
       try {
@@ -43,20 +51,28 @@ function Message_Container() {
       }
     };
 
-    if (
-      selectedChatData?._id &&
-      (selectedchatType === "contact" || selectedchatType === "channel")
-    ) {
+    if (selectedChatData?._id && selectedchatType === "contact") {
       getMessage();
     }
   }, [selectedChatData, selectedchatType, token, dispatch]);
 
+  // Track scroll position to check if user is at the bottom
+  const handleScroll = () => {
+    if (messageContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } =
+        messageContainerRef.current;
+      setIsAtBottom(scrollTop + clientHeight >= scrollHeight - 10); // 10px margin
+    }
+  };
+
+  // Only scroll to bottom if user is at bottom
   useEffect(() => {
-    if (scrollRef.current) {
+    if (isAtBottom && scrollRef.current) {
       scrollRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [selectedChatMessage]);
+  }, [selectedChatMessage, isAtBottom]);
 
+  // File download function
   const FileDownload = async (url) => {
     try {
       const response = await fetch(`http://localhost:5000/${url}`);
@@ -78,107 +94,248 @@ function Message_Container() {
     }
   };
 
+  // Render messages based on selected chat type
   const renderMessage = () => {
     if (
-      !Array.isArray(selectedChatMessage) ||
-      selectedChatMessage.length === 0
+      selectedchatType === "contact" &&
+      (!Array.isArray(selectedChatMessage) || selectedChatMessage.length === 0)
     ) {
       return <div className="text-center text-gray-500">No messages yet.</div>;
     }
-    console.log(selectedChatMessage);
-    let lastDate = null;
-    return selectedChatMessage.map((message, index) => {
-      const messageDate = moment(message.timestamp).format("YYYY-MM-DD");
-      const showDate = messageDate !== lastDate;
-      lastDate = messageDate;
-
+    if (
+      selectedchatType === "channel" &&
+      (!Array.isArray(selectedChannelChat) || selectedChannelChat.length === 0)
+    ) {
       return (
-        <div key={index} className="fade-in">
-          {showDate && (
-            <div className="my-2 text-center text-gray-500">
-              {moment(message.timestamp).format("LL")}
-            </div>
-          )}
-          {renderChatMessage(message)}
+        <div className="text-center text-gray-500">
+          No channel messages yet.
         </div>
       );
-    });
+    }
+
+    if (selectedchatType === "contact") {
+      let lastDate = null;
+      return selectedChatMessage.map((message, index) => {
+        const messageDate = moment(message.timestamp).format("YYYY-MM-DD");
+        const showDate = messageDate !== lastDate;
+        lastDate = messageDate;
+
+        return (
+          <div key={index} className="fade-in">
+            {showDate && (
+              <div className="my-2 text-center text-gray-500">
+                {moment(message.timestamp).format("LL")}
+              </div>
+            )}
+            {selectedchatType === "contact" && renderDmMessage(message)}
+          </div>
+        );
+      });
+    } else if (selectedchatType === "channel") {
+      let lastDate = null;
+      return selectedChannelChat.map((message, index) => {
+        const messageDate = moment(message.timestamp).format("YYYY-MM-DD");
+        const showDate = messageDate !== lastDate;
+        lastDate = messageDate;
+
+        return (
+          <div key={index} className="fade-in">
+            {showDate && (
+              <div className="my-2 text-center text-gray-500">
+                {moment(message.timestamp).format("LL")}
+              </div>
+            )}
+            {selectedchatType === "channel" && renderChannelMessage(message)}
+          </div>
+        );
+      });
+    }
   };
 
-  const renderChatMessage = (message) => {
-    const senderId = message.sender?._id || message.sender;
-    const isSender = senderId === user?._id;
+  // Render channel message placeholder
+  const renderChannelMessage = (message) => {
+    const isSender = message.sender._id === user?._id;
 
     return (
       <div
-        className={`flex ${
+        className={`flex my-2 px-2 ${
           isSender ? "justify-end" : "justify-start"
-        } my-2 px-2 w-full`}
+        }`}
       >
         {!isSender && (
-          <Avatar className="w-10 h-10 mr-2">
-            {message.sender?.image ? (
+          <Avatar className="w-10 h-10 rounded-full border-2 border-[#f03a17] shadow-md mr-2">
+            {message?.sender?.image ? (
               <AvatarImage
-                src={message.sender.image}
+                src={message?.sender?.image}
                 alt="profile"
-                className="object-cover"
+                className="object-cover w-full h-full rounded-full"
               />
             ) : (
-              <div
-                className={`text-white flex items-center justify-center w-full h-full font-semibold ${getColor(
-                  message.sender?.color
-                )}`}
-              >
-                {message.sender?.firstname?.charAt(0)}{" "}
-                {message.sender?.lastname?.charAt(0)}
+              <div className="flex items-center justify-center w-full h-full text-white font-semibold text-lg bg-gradient-to-r from-[#6a11cb] to-[#2575fc]">
+                {message?.sender?.firstname?.charAt(0) || ""}
               </div>
             )}
           </Avatar>
         )}
+
         <div
-          className={`rounded-xl p-3 shadow-md max-w-[75%] text-white ${
-            isSender ? "bg-indigo-600" : "bg-gray-800"
+          className={`p-3 rounded-xl max-w-[75%] sm:max-w-[60%] shadow-md transition-all transform hover:scale-[1.02] ${
+            isSender
+              ? "bg-[#8417ff] text-white border border-[#6b11cc]"
+              : "bg-[#2a2b33] text-white border border-[#ffffff]/20"
           }`}
         >
-          {message.messageType === "text" ? (
-            <p className="text-base leading-relaxed">{message?.content}</p>
-          ) : (
-            <img
-              src={`http://localhost:5000/${message.fileUrl}`}
-              alt="Uploaded file"
-              className="w-full max-w-[300px] h-auto rounded-md cursor-pointer"
-              onClick={() => {
-                setImageUrl(message.fileUrl);
-                setShowImage(true);
-              }}
-            />
+          {message.messageType === "text" && (
+            <div>
+              <p className="text-sm leading-5 break-words">
+                {message?.content}
+              </p>
+              <div className="mt-1 text-xs text-right text-gray-400">
+                {moment(message?.timestamp).format("LT")}
+              </div>
+            </div>
           )}
-          <div className="mt-1 text-xs text-right text-gray-400">
-            {moment(message?.timestamp).format("LT")}
-          </div>
+
+          {message.messageType === "file" && (
+            <div>
+              {checkImage(message.fileUrl) ? (
+                <div
+                  className="cursor-pointer"
+                  onClick={() => {
+                    setImageUrl(message.fileUrl);
+                    setShowImage(true);
+                  }}
+                >
+                  <img
+                    src={`http://localhost:5000/${message.fileUrl}`}
+                    alt="Uploaded file"
+                    className="w-full max-w-[250px] rounded-lg shadow-md"
+                  />
+                </div>
+              ) : (
+                <div className="flex items-center justify-between gap-3 p-2 rounded-lg bg-black/10">
+                  <span className="p-2 text-2xl text-white rounded-full bg-black/20">
+                    <MdFolderZip />
+                  </span>
+                  <span className="text-sm truncate max-w-[150px]">
+                    {message.fileUrl.split("/").pop()}
+                  </span>
+                  <span
+                    className="p-2 text-2xl transition-all duration-300 rounded-full cursor-pointer bg-black/20 hover:bg-black/50"
+                    onClick={() => FileDownload(message.fileUrl)}
+                  >
+                    <IoMdArrowRoundDown />
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     );
   };
 
+  // Render individual DM message
+  const renderDmMessage = (message) => {
+    const isSender = message.sender === user?._id;
+
+    return (
+      <div
+        className={`flex my-2 ${
+          isSender ? "justify-start" : "justify-end"
+        } px-2`}
+      >
+        {message.messageType === "text" && (
+          <div
+            className={`p-3 rounded-lg max-w-[80%] sm:max-w-[60%] break-words shadow-md transition-all transform scale-95 hover:scale-100 ${
+              isSender
+                ? "bg-[#8417ff] text-white border border-[#6b11cc] self-start"
+                : "bg-[#2a2b33] text-white border border-[#ffffff]/20 self-end"
+            }`}
+          >
+            {message?.content}
+            <div className="mt-1 text-xs text-gray-400">
+              {moment(message?.timestamp).format("LT")}
+            </div>
+          </div>
+        )}
+
+        {message.messageType === "file" && (
+          <div
+            className={`p-3 rounded-lg max-w-[80%] sm:max-w-[60%] break-words shadow-md transition-all transform scale-95 hover:scale-100 ${
+              isSender
+                ? "bg-[#8417ff]/50 text-white border border-solid self-start"
+                : "bg-[#2a2b33] text-white border border-[#ffffff]/20 self-end"
+            }`}
+          >
+            {checkImage(message.fileUrl) ? (
+              <div
+                className="cursor-pointer"
+                onClick={() => {
+                  setImageUrl(message.fileUrl);
+                  setShowImage(true);
+                }}
+              >
+                <img
+                  src={`http://localhost:5000/${message.fileUrl}`}
+                  alt="Uploaded file"
+                  className="w-full max-w-[300px] bg-cover h-auto rounded-md"
+                />
+              </div>
+            ) : (
+              <div className="flex items-center justify-center gap-4">
+                <span className="p-3 text-3xl rounded-full text-white/80 bg-black/20">
+                  <MdFolderZip />
+                </span>
+                <span className="block mt-1 text-sm">
+                  {message.fileUrl.split("/").pop()}
+                </span>
+                <span
+                  className="p-3 text-3xl transition-all duration-300 rounded-full cursor-pointer bg-black/20 hover:bg-black/50"
+                  onClick={() => FileDownload(message.fileUrl)}
+                >
+                  <IoMdArrowRoundDown />
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
-    <div className="flex-1 w-full p-4 px-4 sm:px-8 overflow-y-auto max-h-[80vh] custom-scrollbar bg-gray-900 rounded-lg shadow-lg">
+    <div
+      ref={messageContainerRef}
+      onScroll={handleScroll}
+      className="flex-1 w-full p-4 px-4 sm:px-8 overflow-y-auto max-h-[80vh] custom-scrollbar"
+    >
       {renderMessage()}
       <div ref={scrollRef}></div>
-
       {showImage && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-black/50">
-          <div className="relative p-4">
+        <div className="fixed z-[1000] top-0 left-0 h-[100vh] w-[100vw] flex items-center justify-center backdrop-blur-lg flex-col">
+          <div>
             <img
               src={`http://localhost:5000/${ImageUrl}`}
               alt="Uploaded file"
-              className="h-[80vh] w-auto max-w-full rounded-lg shadow-lg"
+              className="h-[80vh] w-full bg-cover"
             />
+          </div>
+          <div className="top-0 flex gap-4 mt-6">
             <button
-              className="absolute p-2 text-white transition bg-gray-800 rounded-full top-2 right-2 hover:bg-red-500"
-              onClick={() => setShowImage(false)}
+              className="p-3 text-3xl transition-all duration-300 rounded-full cursor-pointer bg-black/20 hover:bg-black/50"
+              onClick={() => FileDownload(ImageUrl)}
             >
-              <IoCloseSharp size={24} />
+              <IoMdArrowRoundDown />
+            </button>
+            <button
+              className="p-3 text-3xl transition-all duration-300 rounded-full cursor-pointer bg-black/20 hover:bg-black/50"
+              onClick={() => {
+                setShowImage(false);
+                setImageUrl(null);
+              }}
+            >
+              <IoCloseSharp />
             </button>
           </div>
         </div>

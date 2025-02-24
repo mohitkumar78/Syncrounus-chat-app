@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   setSelectedChatData,
   setChatType,
@@ -6,23 +6,66 @@ import {
 } from "../Store/contact-slice";
 import { useSelector, useDispatch } from "react-redux";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import {
+  setSelectedChannelData,
+  setSelectedChannelChat,
+} from "../Store/channel-slice";
 
 function ContactList({ contacts = [], ischannel = false }) {
   const dispatch = useDispatch();
+
   const { selectedChatData } = useSelector((store) => store.contact);
+  const { selectedChannelData } = useSelector((store) => store.channel);
+
+  // Helper to determine active chat/channel
+  const isActive = (contact) => {
+    if (ischannel) {
+      return selectedChannelData && selectedChannelData._id === contact._id;
+    } else {
+      return selectedChatData && selectedChatData._id === contact._id;
+    }
+  };
+
+  // On initial render, if no chat/channel is selected, select the first one.
+  useEffect(() => {
+    if (contacts && contacts.length > 0) {
+      const firstContact = contacts[0];
+      if (ischannel) {
+        if (!selectedChannelData) {
+          dispatch(setChatType({ chatType: "channel" }));
+          dispatch(setSelectedChannelData({ channel: firstContact }));
+          dispatch(setSelectedChannelChat({ message: [] }));
+        }
+      } else {
+        if (!selectedChatData) {
+          dispatch(setChatType({ chatType: "contact" }));
+          dispatch(setSelectedChatData({ contact: firstContact }));
+          dispatch(setSelectedChat({ message: [] }));
+        }
+      }
+    }
+  }, [contacts, ischannel, dispatch, selectedChatData, selectedChannelData]);
 
   const handleClick = (contact) => {
-    console.log(contact);
-    if (ischannel) {
-      dispatch(setChatType({ chatType: "channel" }));
-    } else {
-      dispatch(setChatType({ chatType: "contact" }));
-    }
-    dispatch(setSelectedChatData({ contact }));
+    console.log("Contact clicked:", contact);
 
-    if (selectedChatData && selectedChatData._id !== contact._id) {
-      console.log("Switching chat, clearing previous messages...");
-      dispatch(setSelectedChat({ message: [] })); // Pass an object
+    if (ischannel) {
+      // Clear channel messages if switching channels
+      console.log(ischannel);
+      if (selectedChannelData && selectedChannelData._id !== contact._id) {
+        console.log("Switching channel, clearing previous channel messages...");
+        dispatch(setSelectedChannelChat({ message: [] }));
+      }
+      dispatch(setChatType({ chatType: "channel" }));
+      dispatch(setSelectedChannelData({ channel: contact }));
+    } else {
+      // Clear contact messages if switching contacts
+      if (selectedChatData && selectedChatData._id !== contact._id) {
+        console.log("Switching chat, clearing previous messages...");
+        dispatch(setSelectedChat({ message: [] }));
+      }
+      dispatch(setChatType({ chatType: "contact" }));
+      dispatch(setSelectedChatData({ contact }));
     }
   };
 
@@ -35,7 +78,7 @@ function ContactList({ contacts = [], ischannel = false }) {
             onClick={() => handleClick(contact)}
             className={`flex items-center gap-4 p-3 rounded-lg cursor-pointer transition-all duration-300 ease-in-out overflow-hidden
               ${
-                selectedChatData && selectedChatData._id === contact._id
+                isActive(contact)
                   ? "bg-[#6a11cb] text-white scale-105"
                   : "hover:bg-[#f1f1f1] dark:hover:bg-[#333] text-gray-900 dark:text-gray-300"
               }`}
