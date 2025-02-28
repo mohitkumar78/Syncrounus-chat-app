@@ -39,6 +39,7 @@ function Login() {
         { headers: { "Content-Type": "application/json" } }
       );
       if (res) {
+        console.log(res);
         toast.success(res.data.message || "Login successful");
         dispatch(setUser({ user: res.data.user, token: res.data.token }));
         navigate("/profile");
@@ -56,7 +57,7 @@ function Login() {
             type="email"
             name="email"
             placeholder="Enter your email"
-            className="w-full px-6 py-3 rounded-full"
+            className="w-full px-6 py-3 text-black rounded-full"
             value={email}
             onChange={handleChange}
           />
@@ -64,7 +65,7 @@ function Login() {
             type="password"
             name="password"
             placeholder="Enter your password"
-            className="w-full px-6 py-3 rounded-full"
+            className="w-full px-6 py-3 text-black rounded-full"
             value={password}
             onChange={handleChange}
           />

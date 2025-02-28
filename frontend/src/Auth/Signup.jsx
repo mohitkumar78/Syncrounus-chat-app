@@ -57,7 +57,7 @@ function Signup() {
           type="email"
           name="email"
           placeholder="Enter your email"
-          className="w-full px-6 py-3 rounded-full"
+          className="w-full px-6 py-3 text-black rounded-full"
           value={email}
           onChange={handleChange}
         />
@@ -65,7 +65,7 @@ function Signup() {
           type="password"
           name="password"
           placeholder="Enter your password"
-          className="w-full px-6 py-3 rounded-full"
+          className="w-full px-6 py-3 text-black rounded-full"
           value={password}
           onChange={handleChange}
         />
@@ -73,7 +73,7 @@ function Signup() {
           type="password"
           name="confirmPassword"
           placeholder="Confirm password"
-          className="w-full px-6 py-3 rounded-full"
+          className="w-full px-6 py-3 text-black rounded-full"
           value={confirmPassword}
           onChange={handleChange}
         />
