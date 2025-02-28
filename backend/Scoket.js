@@ -84,7 +84,7 @@ const socketSetup = (server) => {
         // Listener for personal messages
         socket.on("sendMessage", async (message) => {
             try {
-                console.log("📩 Received message:", message);
+
 
                 const createMessage = await Message.create(message);
 

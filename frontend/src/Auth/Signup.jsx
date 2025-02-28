@@ -1,10 +1,10 @@
-import React, { useState } from "react";
-
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import React, { useState, Suspense } from "react";
 import { toast } from "sonner";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+
+// Directly import the UI components
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 function Signup() {
   const [formData, setFormData] = useState({
@@ -42,7 +42,6 @@ function Signup() {
         { email, password },
         { headers: { "Content-Type": "application/json" } }
       );
-      console.log(res);
       if (res) {
         toast.success(res.data.message || "Signup successful");
       }
@@ -50,6 +49,7 @@ function Signup() {
       toast.error(error.response?.data?.message || "Error during signup");
     }
   };
+
   return (
     <form onSubmit={submitHandler}>
       <div className="flex flex-col items-center space-y-4">

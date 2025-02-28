@@ -40,8 +40,6 @@ export const SocketProvider = ({ children }) => {
       });
 
       socketRef.current.on("receiveMessage", (message) => {
-        console.log("📩 Message received:", message);
-
         // Use refs to get the latest state values
         const latestSelectedChatData = selectedChatDataRef.current;
         const latestSelectedChatType = selectedchatTypeRef.current;
@@ -59,7 +57,6 @@ export const SocketProvider = ({ children }) => {
         }
       });
       socketRef.current.on("recive-channel-msg", (message) => {
-        console.log("reciving channel message", message);
         dispatch(clearChatContainer());
         const latestSelectedChannelData = selectedChannelDataRef.current;
         const latestSelectedChatType = selectedchatTypeRef.current;

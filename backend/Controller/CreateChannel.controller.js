@@ -26,7 +26,7 @@ export const createChannel = async (req, res) => {
             admin
         })
         await newChannel.save()
-        console.log("new channel", newChannel)
+
         return res.status(201).json({
             Channel: newChannel
         })
@@ -58,6 +58,24 @@ export const getAllUserChannel = async (req, res) => {
     } catch (error) {
         console.log("error is Occur while geting All user channel", error)
         return res(500).send("Internal server Error")
+    }
+
+}
+export const getChannelMessage = async (req, res) => {
+    try {
+        const { channelId } = req.body;
+        const channel = await Channel.findById(channelId).populate({
+            path: "messages", populate: {
+                path: "sender", select: "firstname lastname email image color _id"
+            }
+        })
+        if (!channel) {
+            return res.send("channel is not found")
+        }
+        const message = channel.messages
+        return res.status(201).json({ message })
+    } catch (error) {
+        console.log("Error is Occur in getting channel messages")
     }
 
 }

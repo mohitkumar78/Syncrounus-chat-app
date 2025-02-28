@@ -39,7 +39,6 @@ function Login() {
         { headers: { "Content-Type": "application/json" } }
       );
       if (res) {
-        console.log(res);
         toast.success(res.data.message || "Login successful");
         dispatch(setUser({ user: res.data.user, token: res.data.token }));
         navigate("/profile");

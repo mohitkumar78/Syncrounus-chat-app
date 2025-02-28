@@ -33,7 +33,7 @@ export const getAllmessage = async (req, res) => {
 
 
 export const uploadFile = async (req, res) => {
-    console.log("req is for file upload");
+
     try {
         if (!req.file) {
             return res.status(400).json({

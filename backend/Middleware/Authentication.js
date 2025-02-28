@@ -8,7 +8,7 @@ const authentication = async (req, res, next) => {
         // Extract token from `req.body.token` (for JSON or form-data) or `req.headers.authorization`
         let token = req.body.token || req.headers.authorization?.split(" ")[1];
 
-        console.log("Received token:", token); // Debugging log
+
 
         if (!token) {
             return res.status(401).json({

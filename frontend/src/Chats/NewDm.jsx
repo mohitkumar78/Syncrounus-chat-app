@@ -6,7 +6,6 @@ import { getColor } from "../Utils/Utils.js";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -27,10 +26,10 @@ import { setChatType, setSelectedChatData } from "@/Store/contact-slice.js";
 function NewDm() {
   const dispatch = useDispatch();
   const { token } = useSelector((store) => store.auth);
+
   const [openNewContactModel, setOpenNewContactModel] = useState(false);
   const [searchContact, setSearchContact] = useState([]);
   const selectedContact = (contact) => {
-    console.log(contact);
     if (!contact) return;
     dispatch(setChatType({ chatType: "contact" }));
     dispatch(setSelectedChatData({ contact }));
@@ -40,6 +39,7 @@ function NewDm() {
   };
   const SearchContacts = async (searchTerm) => {
     try {
+      console.log(token);
       const response = await axios.post(
         "http://localhost:5000/api/v1/users/contact",
         {

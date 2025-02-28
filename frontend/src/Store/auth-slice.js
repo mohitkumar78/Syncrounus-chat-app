@@ -3,7 +3,6 @@ import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
     user: null,
     token: ""
-
 };
 
 const authSlice = createSlice({
@@ -12,9 +11,10 @@ const authSlice = createSlice({
     reducers: {
         setUser: (state, action) => {
             state.user = action.payload.user;
-            state.token = action.payload.token
-            console.log(action.payload.user)
-            console.log(state.user)
+            state.token = action.payload.token;
+
+            // Correct way to store user and token in localStorage
+
         },
         updateUser: (state, action) => {
             console.log(action.payload);
@@ -23,17 +23,18 @@ const authSlice = createSlice({
             }
             console.log(state.user); // Updated user object
         },
-        logout: (state, action) => {
-            state.user = null,
-                state.token = ""
+        logout: (state) => {
+            state.user = null;
+            state.token = "";
+
+            // Remove user and token from localStorage
+
         }
-
-
     },
 });
 
-// Correctly export the setUser action
+// Export actions
 export const { setUser, updateUser, logout } = authSlice.actions;
 
-// Export the reducer
+// Export reducer
 export default authSlice.reducer;

@@ -15,10 +15,11 @@ import { logout } from "../Store/auth-slice.js";
 
 function ProfileInfo() {
   const { user } = useSelector((store) => store.auth);
+
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  console.log("User Data:", user); // Debugging user data
+  // Debugging user data
 
   // Ensure user exists before rendering
   if (!user) return null;

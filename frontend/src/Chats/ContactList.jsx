@@ -47,13 +47,10 @@ function ContactList({ contacts = [], ischannel = false }) {
   }, [contacts, ischannel, dispatch, selectedChatData, selectedChannelData]);
 
   const handleClick = (contact) => {
-    console.log("Contact clicked:", contact);
-
     if (ischannel) {
       // Clear channel messages if switching channels
-      console.log(ischannel);
+
       if (selectedChannelData && selectedChannelData._id !== contact._id) {
-        console.log("Switching channel, clearing previous channel messages...");
         dispatch(setSelectedChannelChat({ message: [] }));
       }
       dispatch(setChatType({ chatType: "channel" }));
@@ -61,7 +58,6 @@ function ContactList({ contacts = [], ischannel = false }) {
     } else {
       // Clear contact messages if switching contacts
       if (selectedChatData && selectedChatData._id !== contact._id) {
-        console.log("Switching chat, clearing previous messages...");
         dispatch(setSelectedChat({ message: [] }));
       }
       dispatch(setChatType({ chatType: "contact" }));

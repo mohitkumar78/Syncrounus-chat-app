@@ -8,23 +8,26 @@ import "./Scroolbar.css";
 import axios from "axios";
 import { IoCloseSharp } from "react-icons/io5";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { setSelectedChannelChat } from "../../Store/channel-slice";
 function Message_Container() {
   const dispatch = useDispatch();
-  const { selectedChannelChat } = useSelector((store) => store.channel);
+  const { selectedChannelChat, selectedChannelData } = useSelector(
+    (store) => store.channel
+  );
 
   const [showImage, setShowImage] = useState(false);
   const [ImageUrl, setImageUrl] = useState(null);
   const { user, token } = useSelector((store) => store.auth);
+
   const {
     selectedChatMessage,
     selectedChatData,
     selectedchatType, // Updated to camelCase
   } = useSelector((store) => store.contact);
-  console.log(selectedChatData, selectedchatType, selectedChatMessage);
+
   const messageContainerRef = useRef();
   const scrollRef = useRef();
   const [isAtBottom, setIsAtBottom] = useState(true);
-  console.log("channel msg", selectedChannelChat);
 
   // Check if file is an image
   const checkImage = (filePath) => {
@@ -43,18 +46,42 @@ function Message_Container() {
         );
 
         if (response.data.messages) {
-          console.log("Fetched messages from API:", response.data.messages);
           dispatch(setSelectedChat({ message: response.data.messages }));
         }
       } catch (error) {
         console.log("Error in fetching message history:", error);
       }
     };
-
+    const getChannelMessage = async () => {
+      try {
+        const response = await axios.post(
+          "http://localhost:5000/api/v1/channels/getChannelMessage",
+          {
+            channelId: selectedChannelData._id,
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        dispatch(setSelectedChannelChat({ message: response.data.message }));
+      } catch (error) {
+        console.log("error is Occur while getting all channel message", error);
+      }
+    };
     if (selectedChatData?._id && selectedchatType === "contact") {
       getMessage();
+    } else if (selectedChannelData?._id && selectedchatType === "channel") {
+      getChannelMessage();
     }
-  }, [selectedChatData, selectedchatType, token, dispatch]);
+  }, [
+    selectedChatData,
+    selectedChannelData,
+    selectedchatType,
+    token,
+    dispatch,
+  ]);
 
   // Track scroll position to check if user is at the bottom
   const handleScroll = () => {
@@ -70,7 +97,7 @@ function Message_Container() {
     if (isAtBottom && scrollRef.current) {
       scrollRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [selectedChatMessage, isAtBottom]);
+  }, [selectedChatMessage, selectedChannelChat, isAtBottom]);
 
   // File download function
   const FileDownload = async (url) => {

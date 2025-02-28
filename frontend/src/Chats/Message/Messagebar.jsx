@@ -39,7 +39,7 @@ function Messagebar() {
         messageType: "text",
         fileUrl: undefined,
       };
-      console.log("sending message", messageData);
+
       socket.emit("sendMessage", messageData);
     } else if (selectedchatType === "channel") {
       const messageData = {

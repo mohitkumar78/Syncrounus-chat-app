@@ -17,7 +17,6 @@ export const getAllMessage = async () => {
     );
 
     if (response.data.messages) {
-      console.log("Fetched messages:", response.data.messages);
       dispatch(setSelectedChat({ message: response.data.messages })); // ✅ Send full array
     }
   } catch (error) {

@@ -15,7 +15,7 @@ export const register = async (req, res) => {
 
         // Check if the user already exists
         const existingUser = await userdata.findOne({ email });
-        console.log(existingUser)
+
         if (existingUser) {
             return res.status(400).json({
                 message: "User already exists with this email.",
@@ -99,7 +99,7 @@ export const getInfo = async (req, res) => {
         const { firstName, lastName, image, profileSetup, color } = req.body;
         const userid = req.id;
 
-        console.log(profileSetup);
+
 
         // Check if all required fields are provided
         if (!firstName || !lastName || !image || profileSetup === undefined) {
