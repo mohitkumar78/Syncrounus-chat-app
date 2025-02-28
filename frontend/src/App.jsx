@@ -2,9 +2,8 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "sonner";
 import { useSelector } from "react-redux";
-import Auth from "./Auth/auth";
+import Auth from "./Auth/Auth";
 import Profile from "./Auth/Profile";
-
 import Login from "./Auth/Login";
 import Signup from "./Auth/Signup";
 import Chat from "./Chats/Chat";
