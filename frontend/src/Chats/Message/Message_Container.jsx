@@ -40,7 +40,7 @@ function Message_Container() {
     const getMessage = async () => {
       try {
         const response = await axios.post(
-          "http://localhost:5000/api/v1/message/getAllmessage",
+          "https://syncrounus-chat-app-1.onrender.com/api/v1/message/getAllmessage",
           { token, recipient: selectedChatData?._id },
           { headers: { "Content-Type": "application/json" } }
         );
@@ -55,7 +55,7 @@ function Message_Container() {
     const getChannelMessage = async () => {
       try {
         const response = await axios.post(
-          "http://localhost:5000/api/v1/channels/getChannelMessage",
+          "https://syncrounus-chat-app-1.onrender.com/api/v1/channels/getChannelMessage",
           {
             channelId: selectedChannelData._id,
           },
@@ -102,7 +102,9 @@ function Message_Container() {
   // File download function
   const FileDownload = async (url) => {
     try {
-      const response = await fetch(`http://localhost:5000/${url}`);
+      const response = await fetch(
+        `https://syncrounus-chat-app-1.onrender.com/${url}`
+      );
       if (!response.ok) throw new Error("Failed to fetch file");
 
       const blob = await response.blob();

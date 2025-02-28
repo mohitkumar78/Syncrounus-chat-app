@@ -31,7 +31,7 @@ function Profile() {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/v1/user/getInfo",
+        "https://syncrounus-chat-app-1.onrender.com/api/v1/user/getInfo",
         {
           firstName,
           lastName,

@@ -30,7 +30,7 @@ export const SocketProvider = ({ children }) => {
 
   useEffect(() => {
     if (user && !socketRef.current) {
-      socketRef.current = io("http://localhost:5000", {
+      socketRef.current = io("https://syncrounus-chat-app-1.onrender.com", {
         withCredentials: true,
         query: { userId: user._id },
       });

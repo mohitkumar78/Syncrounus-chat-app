@@ -41,7 +41,7 @@ function NewDm() {
     try {
       console.log(token);
       const response = await axios.post(
-        "http://localhost:5000/api/v1/users/contact",
+        "https://syncrounus-chat-app-1.onrender.com/api/v1/users/contact",
         {
           token,
           searchTerm,

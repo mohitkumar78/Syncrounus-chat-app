@@ -8,7 +8,7 @@ export const getAllMessage = async () => {
   console.log("get all message call");
   try {
     const response = await axios.post(
-      "http://localhost:5000/api/v1/message/getAllmessage",
+      "https://syncrounus-chat-app-1.onrender.com/api/v1/message/getAllmessage",
       {
         token,
         recipient: selectedChatData?._id,

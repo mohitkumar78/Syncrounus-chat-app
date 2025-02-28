@@ -5,7 +5,7 @@ import Channel from "./Model/CreateChannel.model.js";
 const socketSetup = (server) => {
     const io = new SocketIoServer(server, {
         cors: {
-            origin: "http://localhost:5173",
+            origin: "https://syncrounus-chat-app-1.onrender.com",
             methods: ["GET", "POST"],
             credentials: true,
         },

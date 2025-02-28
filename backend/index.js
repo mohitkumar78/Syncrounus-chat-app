@@ -11,7 +11,11 @@ import scoketSetup from './Scoket.js'
 import path from "path"
 const app = express();
 
-app.use(cors())
+app.use(cors({
+    origin: "https://syncrounus-chat-app-1.onrender.com",
+
+    credentials: true,
+},))
 dotenv.config()
 
 app.use(express.json())

@@ -54,7 +54,7 @@ function CreateChannel() {
     const getAllContact = async () => {
       try {
         const response = await axios.post(
-          "http://localhost:5000/api/v1/users/getAllContact",
+          "https://syncrounus-chat-app-1.onrender.com/api/v1/users/getAllContact",
           { token },
           { headers: { "Content-Type": "application/json" } }
         );
@@ -69,7 +69,7 @@ function CreateChannel() {
   const createChannel = async () => {
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/v1/channels/channel",
+        "https://syncrounus-chat-app-1.onrender.com/api/v1/channels/channel",
         {
           name: channelName,
           members: selectedOptions.map((opt) => opt.value),

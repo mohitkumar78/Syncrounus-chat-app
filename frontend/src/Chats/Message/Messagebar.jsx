@@ -77,7 +77,7 @@ function Messagebar() {
       console.log("Sending token:", token); // Debugging
 
       const response = await axios.post(
-        "http://localhost:5000/api/v1/message/upload-file",
+        "https://syncrounus-chat-app-1.onrender.com/api/v1/message/upload-file",
         formData,
         {
           headers: {

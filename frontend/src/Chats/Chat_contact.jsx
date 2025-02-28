@@ -23,7 +23,7 @@ function Chat_contact() {
     const getContact = async () => {
       try {
         const response = await axios.post(
-          "http://localhost:5000/api/v1/users/getcontacts-for-dm",
+          "https://syncrounus-chat-app-1.onrender.com/api/v1/users/getcontacts-for-dm",
           { token },
           { headers: { "Content-Type": "application/json" } }
         );
@@ -38,7 +38,7 @@ function Chat_contact() {
     const getAllUserChannel = async () => {
       try {
         const response = await axios.post(
-          "http://localhost:5000/api/v1/channels/getAllUserChannel",
+          "https://syncrounus-chat-app-1.onrender.com/api/v1/channels/getAllUserChannel",
           { token },
           { headers: { "Content-Type": "application/json" } }
         );
