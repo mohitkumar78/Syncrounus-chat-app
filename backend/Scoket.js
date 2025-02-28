@@ -78,7 +78,7 @@ const socketSetup = (server) => {
             userSocketMap.set(userId, socket.id); // Store latest socket ID for the user
             console.log(`✅ User ${userId} connected with socket ID ${socket.id}`);
         } else {
-            console.log("❌ User ID not provided in handshake.");
+            console.log("❌ User not provided in handshake.");
         }
 
         // Listener for personal messages
