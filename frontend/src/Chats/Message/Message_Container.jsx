@@ -236,7 +236,7 @@ function Message_Container() {
                   }}
                 >
                   <img
-                    src={`http://localhost:5000/${message.fileUrl}`}
+                    src={`https://syncrounus-chat-app-1.onrender.com/${message.fileUrl}`}
                     alt="Uploaded file"
                     className="w-full max-w-[250px] rounded-lg shadow-md"
                   />
@@ -306,7 +306,7 @@ function Message_Container() {
                 }}
               >
                 <img
-                  src={`http://localhost:5000/${message.fileUrl}`}
+                  src={`https://syncrounus-chat-app-1.onrender.com/${message.fileUrl}`}
                   alt="Uploaded file"
                   className="w-full max-w-[300px] bg-cover h-auto rounded-md"
                 />
@@ -345,7 +345,7 @@ function Message_Container() {
         <div className="fixed z-[1000] top-0 left-0 h-[100vh] w-[100vw] flex items-center justify-center backdrop-blur-lg flex-col">
           <div>
             <img
-              src={`http://localhost:5000/${ImageUrl}`}
+              src={`https://syncrounus-chat-app-1.onrender.com/${ImageUrl}`}
               alt="Uploaded file"
               className="h-[80vh] w-full bg-cover"
             />
