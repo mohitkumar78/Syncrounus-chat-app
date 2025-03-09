@@ -34,6 +34,7 @@ function CreateChannel() {
           { token },
           { headers: { "Content-Type": "application/json" } }
         );
+        console.log(response.data.contacts);
         setAllOptions(response.data.contacts); // Store all contacts
       } catch (error) {
         console.error("Error fetching contacts:", error);
